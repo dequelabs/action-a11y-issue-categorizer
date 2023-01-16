@@ -9647,16 +9647,16 @@ function run() {
             const addLabel = [];
             if (issueHasLabel(issue, 'Production')) {
                 // Accessbilility Issues we missed and are in production already:
-                if (issueHasLabel(issue, 'Blocker') && isOlderThan4Weeks(issue_date)) {
+                if (issueHasLabel(issue, 'Blocker') && isOlderThan4Weeks(issue_number, issue_date)) {
                     addLabel.push('CAT1');
                 }
-                else if (issueHasLabel(issue, 'Critical') && isOlderThan10Weeks(issue_date)) {
+                else if (issueHasLabel(issue, 'Critical') && isOlderThan10Weeks(issue_number, issue_date)) {
                     addLabel.push('CAT2');
                 }
-                else if (issueHasLabel(issue, 'Serious') && isOlderThan20Weeks(issue_date)) {
+                else if (issueHasLabel(issue, 'Serious') && isOlderThan20Weeks(issue_number, issue_date)) {
                     addLabel.push('CAT3');
                 }
-                else if (issueHasLabel(issue, 'Moderate') && isOlderThan30Weeks(issue_date)) {
+                else if (issueHasLabel(issue, 'Moderate') && isOlderThan30Weeks(issue_number, issue_date)) {
                     addLabel.push('CAT4');
                 }
             }
@@ -9665,7 +9665,7 @@ function run() {
                 if ((issueHasLabel(issue, 'Blocker') || issueHasLabel(issue, 'Critical') || issueHasLabel(issue, 'Serious'))) {
                     addLabel.push('CAT0');
                 }
-                else if (issueHasLabel(issue, 'Moderate') && isOlderThan10Weeks(issue_date)) {
+                else if (issueHasLabel(issue, 'Moderate') && isOlderThan10Weeks(issue_number, issue_date)) {
                     addLabel.push('CAT2');
                 }
             }
@@ -9703,24 +9703,24 @@ function addLabels(token, issue_number, labels) {
         });
     });
 }
-function isOlderThan4Weeks(issue_date) {
+function isOlderThan4Weeks(issue_number, issue_date) {
     const fourWeeksAgo = new Date().getTime() - (4 * 7 * 24 * 60 * 60 * 1000);
-    console.log(`Comparing issue_date ${issue_date} : ${Date.parse(issue_date)} to 30 weeks ago ${new Date(fourWeeksAgo)} : ${fourWeeksAgo}`);
+    console.log(`Comparing issue ${issue_number} issue_date ${issue_date} : ${Date.parse(issue_date)} to 30 weeks ago ${new Date(fourWeeksAgo)} : ${fourWeeksAgo}`);
     return Date.parse(issue_date) < fourWeeksAgo;
 }
-function isOlderThan10Weeks(issue_date) {
+function isOlderThan10Weeks(issue_number, issue_date) {
     const tenWeeksAgo = new Date().getTime() - (10 * 7 * 24 * 60 * 60 * 1000);
-    console.log(`Comparing issue_date ${issue_date} : ${Date.parse(issue_date)} to 30 weeks ago ${new Date(tenWeeksAgo)} : ${tenWeeksAgo}`);
+    console.log(`Comparing issue ${issue_number} issue_date ${issue_date} : ${Date.parse(issue_date)} to 30 weeks ago ${new Date(tenWeeksAgo)} : ${tenWeeksAgo}`);
     return Date.parse(issue_date) < tenWeeksAgo;
 }
-function isOlderThan20Weeks(issue_date) {
+function isOlderThan20Weeks(issue_number, issue_date) {
     const twentyWeeksAgo = new Date().getTime() - (20 * 7 * 24 * 60 * 60 * 1000);
-    console.log(`Comparing issue_date ${issue_date} : ${Date.parse(issue_date)} to 30 weeks ago ${new Date(twentyWeeksAgo)} : ${twentyWeeksAgo}`);
+    console.log(`Comparing issue ${issue_number} issue_date ${issue_date} : ${Date.parse(issue_date)} to 30 weeks ago ${new Date(twentyWeeksAgo)} : ${twentyWeeksAgo}`);
     return Date.parse(issue_date) < twentyWeeksAgo;
 }
-function isOlderThan30Weeks(issue_date) {
+function isOlderThan30Weeks(issue_number, issue_date) {
     const thirtyWeeksAgo = new Date().getTime() - (30 * 7 * 24 * 60 * 60 * 1000);
-    console.log(`Comparing issue_date ${issue_date} : ${Date.parse(issue_date)} to 30 weeks ago ${new Date(thirtyWeeksAgo)} : ${thirtyWeeksAgo}`);
+    console.log(`Comparing issue ${issue_number} issue_date ${issue_date} : ${Date.parse(issue_date)} to 30 weeks ago ${new Date(thirtyWeeksAgo)} : ${thirtyWeeksAgo}`);
     return Date.parse(issue_date) < thirtyWeeksAgo;
 }
 run();
