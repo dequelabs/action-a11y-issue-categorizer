@@ -1,4 +1,4 @@
-name: Deque Accessibility Metric Tracking Job
+name: Deque Accessibility Metric Categorizer Job
 on:
   workflow_dispatch: # Manually trigger.
 jobs:
@@ -12,10 +12,9 @@ jobs:
           cache: yarn
       - run: yarn
       - run: yarn lint
-  add_labels:
+  categorize_a11y_issues:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: dequelabs/action-vpat-labels@main
       - uses: ./
         

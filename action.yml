@@ -1,10 +1,11 @@
 name: 'Deque Accessibility Issue Labeler'
-description: 'Labels issues automatically for accessibility based on their body'
-author: 'Deque'
+description: 'Categorizes issues automatically for accessibility based on their creation date and existing issue labels'
+author: 'Deque Systems, Inc.'
 inputs:
   repo-token:
     description: 'The GITHUB_TOKEN secret'
     required: true
+    default: ${{ github.token }}
 runs:
   using: node16
   main: dist/index.js
