@@ -24,7 +24,7 @@ async function run() {
       } else if(issueHasLabel(issue, 'Moderate') && isOlderThan30Weeks(issue_date)) {
         addLabel.push('CAT4')
       }  
-    } else if (issueHasLabel(issue, 'released')) {
+    } else if (issueHasLabel(issue, 'Released')) {
       // Accessibility Issues we created in release cycle:
       if((issueHasLabel(issue, 'Blocker') || issueHasLabel(issue, 'Critical') || issueHasLabel(issue, 'Serious'))) {
         addLabel.push('CAT0')
