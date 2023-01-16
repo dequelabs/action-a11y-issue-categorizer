@@ -1,0 +1,13 @@
+name: 'Deque Accessibility Issue Labeler'
+description: 'Labels issues automatically for accessibility based on their body'
+author: 'Deque'
+inputs:
+  repo-token:
+    description: 'The GITHUB_TOKEN secret'
+    required: true
+runs:
+  using: 'node12'
+  main: 'lib/main.js'
+branding:
+  icon: 'activity'
+  color: 'blue'
