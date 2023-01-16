@@ -9720,7 +9720,7 @@ function isOlderThan20Weeks(issue_date) {
 }
 function isOlderThan30Weeks(issue_date) {
     const thirtyWeeksAgo = new Date().getTime() - (30 * 7 * 24 * 60 * 60 * 1000);
-    console.log(`Comparing issue_date ${issue_date} to 30 weeks ago ${isOlderThan30Weeks}`);
+    console.log(`Comparing issue_date ${issue_date} to 30 weeks ago ${thirtyWeeksAgo}`);
     return Date.parse(issue_date) < thirtyWeeksAgo;
 }
 run();
