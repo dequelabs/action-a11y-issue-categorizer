@@ -9640,7 +9640,7 @@ function run() {
         // Configuration parameters
         const token = core.getInput('repo-token', { required: true });
         // A client to load data from GitHub
-        let issues = yield findIssues(token);
+        const issues = yield findIssues(token);
         issues.forEach(issue => {
             const issue_number = issue.number;
             const issue_date = issue.created_at;
@@ -9660,7 +9660,7 @@ function run() {
                     addLabel.push('CAT4');
                 }
             }
-            else if (issueHasLabel(issue, 'released')) {
+            else if (issueHasLabel(issue, 'Released')) {
                 // Accessibility Issues we created in release cycle:
                 if ((issueHasLabel(issue, 'Blocker') || issueHasLabel(issue, 'Critical') || issueHasLabel(issue, 'Serious'))) {
                     addLabel.push('CAT0');
@@ -9705,18 +9705,22 @@ function addLabels(token, issue_number, labels) {
 }
 function isOlderThan4Weeks(issue_date) {
     const fourWeeksAgo = new Date().getTime() - (4 * 7 * 24 * 60 * 60 * 1000);
+    console.log(`Comparing issue_date ${issue_date} to 4 weeks ago ${fourWeeksAgo}`);
     return Date.parse(issue_date) < fourWeeksAgo;
 }
 function isOlderThan10Weeks(issue_date) {
     const tenWeeksAgo = new Date().getTime() - (10 * 7 * 24 * 60 * 60 * 1000);
+    console.log(`Comparing issue_date ${issue_date} to 10 weeks ago ${tenWeeksAgo}`);
     return Date.parse(issue_date) < tenWeeksAgo;
 }
 function isOlderThan20Weeks(issue_date) {
     const twentyWeeksAgo = new Date().getTime() - (20 * 7 * 24 * 60 * 60 * 1000);
+    console.log(`Comparing issue_date ${issue_date} to 20 weeks ago ${twentyWeeksAgo}`);
     return Date.parse(issue_date) < twentyWeeksAgo;
 }
 function isOlderThan30Weeks(issue_date) {
     const thirtyWeeksAgo = new Date().getTime() - (30 * 7 * 24 * 60 * 60 * 1000);
+    console.log(`Comparing issue_date ${issue_date} to 30 weeks ago ${isOlderThan30Weeks}`);
     return Date.parse(issue_date) < thirtyWeeksAgo;
 }
 run();

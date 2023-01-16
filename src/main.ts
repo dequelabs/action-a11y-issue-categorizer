@@ -5,7 +5,7 @@ async function run() {
   // Configuration parameters
   const token = core.getInput('repo-token', { required: true });
   // A client to load data from GitHub
-  let issues = await findIssues(token)
+  const issues = await findIssues(token)
   issues.forEach(issue => {
     const issue_number = issue.number
 
@@ -41,7 +41,7 @@ async function run() {
   });
 }
 
-function issueHasLabel(issue, label: String): number | undefined {
+function issueHasLabel(issue, label: string): number | undefined {
   if (issue) {
     return issue.labels.find(
       ({name: name}) => name === label
@@ -77,23 +77,27 @@ async function addLabels(
   });
 }
 
-function isOlderThan4Weeks(issue_date: any) {
+function isOlderThan4Weeks(issue_date: string) {
   const fourWeeksAgo = new Date().getTime() - (4*7*24*60*60*1000)
+  console.log(`Comparing issue_date ${issue_date} to 4 weeks ago ${fourWeeksAgo}`)
   return Date.parse(issue_date) < fourWeeksAgo
 }
 
-function isOlderThan10Weeks(issue_date: any) {  
+function isOlderThan10Weeks(issue_date: string) {  
   const tenWeeksAgo = new Date().getTime() - (10*7*24*60*60*1000)
+  console.log(`Comparing issue_date ${issue_date} to 10 weeks ago ${tenWeeksAgo}`)
   return Date.parse(issue_date) < tenWeeksAgo
 }
 
-function isOlderThan20Weeks(issue_date: any) {  
+function isOlderThan20Weeks(issue_date: string) {  
   const twentyWeeksAgo = new Date().getTime() - (20*7*24*60*60*1000)
+  console.log(`Comparing issue_date ${issue_date} to 20 weeks ago ${twentyWeeksAgo}`)
   return Date.parse(issue_date) < twentyWeeksAgo
 }
 
-function isOlderThan30Weeks(issue_date: any) { 
+function isOlderThan30Weeks(issue_date: string) { 
   const thirtyWeeksAgo = new Date().getTime() - (30*7*24*60*60*1000)
+  console.log(`Comparing issue_date ${issue_date} to 30 weeks ago ${isOlderThan30Weeks}`)
   return Date.parse(issue_date) < thirtyWeeksAgo
 }
 
