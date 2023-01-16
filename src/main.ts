@@ -79,25 +79,25 @@ async function addLabels(
 
 function isOlderThan4Weeks(issue_date: string) {
   const fourWeeksAgo = new Date().getTime() - (4*7*24*60*60*1000)
-  console.log(`Comparing issue_date ${issue_date} to 4 weeks ago ${fourWeeksAgo}`)
+  console.log(`Comparing issue_date ${issue_date} : ${Date.parse(issue_date)} to 30 weeks ago ${new Date(fourWeeksAgo)} : ${fourWeeksAgo}`)
   return Date.parse(issue_date) < fourWeeksAgo
 }
 
 function isOlderThan10Weeks(issue_date: string) {  
   const tenWeeksAgo = new Date().getTime() - (10*7*24*60*60*1000)
-  console.log(`Comparing issue_date ${issue_date} to 10 weeks ago ${tenWeeksAgo}`)
+  console.log(`Comparing issue_date ${issue_date} : ${Date.parse(issue_date)} to 30 weeks ago ${new Date(tenWeeksAgo)} : ${tenWeeksAgo}`)
   return Date.parse(issue_date) < tenWeeksAgo
 }
 
 function isOlderThan20Weeks(issue_date: string) {  
   const twentyWeeksAgo = new Date().getTime() - (20*7*24*60*60*1000)
-  console.log(`Comparing issue_date ${issue_date} to 20 weeks ago ${twentyWeeksAgo}`)
+  console.log(`Comparing issue_date ${issue_date} : ${Date.parse(issue_date)} to 30 weeks ago ${new Date(twentyWeeksAgo)} : ${twentyWeeksAgo}`)
   return Date.parse(issue_date) < twentyWeeksAgo
 }
 
 function isOlderThan30Weeks(issue_date: string) { 
   const thirtyWeeksAgo = new Date().getTime() - (30*7*24*60*60*1000)
-  console.log(`Comparing issue_date ${issue_date} to 30 weeks ago ${thirtyWeeksAgo}`)
+  console.log(`Comparing issue_date ${issue_date} : ${Date.parse(issue_date)} to 30 weeks ago ${new Date(thirtyWeeksAgo)} : ${thirtyWeeksAgo}`)
   return Date.parse(issue_date) < thirtyWeeksAgo
 }
 
