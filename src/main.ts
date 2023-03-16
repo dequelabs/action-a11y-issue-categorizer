@@ -1,9 +1,18 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import * as yaml from 'js-yaml';
 
 async function run() {
   // Configuration parameters
   const token = core.getInput('repo-token', { required: true });
+
+  const a11yMetricsConfigPath = '.github/a11y-metrics.yaml';
+  const metricsEnabled: boolean = await getMeticsEnabled(token, a11yMetricsConfigPath);
+  if (!metricsEnabled) {
+    console.log('Metrics are not enabled, exiting.')
+    return;
+  }
+
   // A client to load data from GitHub
   const issues = await findIssues(token)
   issues.forEach(issue => {
@@ -99,6 +108,41 @@ function isOlderThan30Weeks(issue_number: number, issue_date: string) {
   const thirtyWeeksAgo = new Date().getTime() - (30*7*24*60*60*1000)
   console.log(`Comparing issue ${issue_number} issue_date ${issue_date} : ${Date.parse(issue_date)} to 30 weeks ago ${new Date(thirtyWeeksAgo)} : ${thirtyWeeksAgo}`)
   return Date.parse(issue_date) < thirtyWeeksAgo
+}
+
+async function getMeticsEnabled(
+  token: string,
+  configurationPath: string
+): Promise<boolean> {
+  try {
+    const configurationContent: string = await fetchContent(
+      token,
+      configurationPath
+    );
+  
+    // loads (hopefully) a `{[label:string]: string | StringOrMatchConfig[]}`, but is `any`:
+    const configObject: any = yaml.load(configurationContent);
+
+    // transform `any` => `Map<string,StringOrMatchConfig[]>` or throw if yaml is malformed:
+    return configObject.enabled;
+  } catch (error) {
+    console.log("Unable to retrieve .github/a11y-metrics.yaml, failing.")
+    return false;
+  }
+}
+
+async function fetchContent(
+  token: string,
+  repoPath: string
+): Promise<string> {
+  const response: any = await github.getOctokit(token).rest.repos.getContent({
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+    path: repoPath,
+    ref: github.context.sha
+  });
+
+  return Buffer.from(response.data.content, response.data.encoding).toString();
 }
 
 run();
