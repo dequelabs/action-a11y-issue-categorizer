@@ -1,20 +1,28 @@
 import * as core from '@actions/core';
-import * as github from '@actions/github';
+import { context, getOctokit } from '@actions/github';
+import assert from 'assert';
 import * as yaml from 'js-yaml';
 
 async function run() {
   // Configuration parameters
-  const token = core.getInput('repo-token', { required: true });
-
-  const a11yMetricsConfigPath = '.github/a11y-metrics.yaml';
-  const metricsEnabled: boolean = await getMeticsEnabled(token, a11yMetricsConfigPath);
+  const token = getRequiredInput('repo-token');
+  const metricsEnabled: boolean = await getMeticsEnabled(token);
   if (!metricsEnabled) {
     console.log('Metrics are not enabled, exiting.')
     return;
   }
 
+  const LABELS = {
+    A11Y: getRequiredInput('label-a11y'),
+    BLOCKER: getRequiredInput('label-blocker'),
+    CRITICAL: getRequiredInput('label-critical'),
+    SERIOUS: getRequiredInput('label-serious'),
+    MODERATE: getRequiredInput('label-moderate'),
+    PRODUCTION: getRequiredInput('label-production'),
+  };
+
   // A client to load data from GitHub
-  const issues = await findIssues(token)
+  const issues = await findIssues(token, LABELS.A11Y)
   issues.forEach(issue => {
     const issue_number = issue.number
 
@@ -22,22 +30,22 @@ async function run() {
 
     const addLabel: string[] = []
 
-    if(issueHasLabel(issue, 'Production')) {
+    if(issueHasLabel(issue, LABELS.PRODUCTION)) {
       // Accessbilility Issues we missed and are in production already:
-      if(issueHasLabel(issue, 'Blocker') && isOlderThan4Weeks(issue_number, issue_date)) {
+      if(issueHasLabel(issue, LABELS.BLOCKER) && isOlderThan4Weeks(issue_number, issue_date)) {
         addLabel.push('CAT1')
-      } else if(issueHasLabel(issue, 'Critical') && isOlderThan10Weeks(issue_number, issue_date)) {
+      } else if(issueHasLabel(issue, LABELS.CRITICAL) && isOlderThan10Weeks(issue_number, issue_date)) {
         addLabel.push('CAT2')
-      } else if(issueHasLabel(issue, 'Serious') && isOlderThan20Weeks(issue_number, issue_date)) {
+      } else if(issueHasLabel(issue, LABELS.SERIOUS) && isOlderThan20Weeks(issue_number, issue_date)) {
         addLabel.push('CAT3')
-      } else if(issueHasLabel(issue, 'Moderate') && isOlderThan30Weeks(issue_number, issue_date)) {
+      } else if(issueHasLabel(issue, LABELS.MODERATE) && isOlderThan30Weeks(issue_number, issue_date)) {
         addLabel.push('CAT4')
       }  
     } else if (issueHasLabel(issue, 'Released')) {
       // Accessibility Issues we created in release cycle:
-      if((issueHasLabel(issue, 'Blocker') || issueHasLabel(issue, 'Critical') || issueHasLabel(issue, 'Serious'))) {
+      if((issueHasLabel(issue, LABELS.BLOCKER) || issueHasLabel(issue, LABELS.CRITICAL) || issueHasLabel(issue, LABELS.SERIOUS))) {
         addLabel.push('CAT0')
-      } else if(issueHasLabel(issue, 'Moderate') && isOlderThan10Weeks(issue_number, issue_date)) {
+      } else if(issueHasLabel(issue, LABELS.MODERATE) && isOlderThan10Weeks(issue_number, issue_date)) {
         addLabel.push('CAT2')
       }
     }
@@ -50,6 +58,10 @@ async function run() {
   });
 }
 
+function getRequiredInput(name: string): string {
+  return core.getInput(name, { required: true });
+}
+
 function issueHasLabel(issue, label: string): number | undefined {
   if (issue) {
     return issue.labels.find(
@@ -59,13 +71,13 @@ function issueHasLabel(issue, label: string): number | undefined {
   return
 }
 
-async function findIssues(token: string) {
-  const issues = await github.getOctokit(token).paginate(
-    github.getOctokit(token).rest.issues.listForRepo,
+async function findIssues(token: string, labels: string) {
+  const issues = await getOctokit(token).paginate(
+    getOctokit(token).rest.issues.listForRepo,
     {
-      owner: github.context.repo.owner,
-      repo: github.context.repo.repo,
-      labels: 'A11Y',
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      labels,
       state: 'open'
     });
 
@@ -78,9 +90,9 @@ async function addLabels(
   labels: string[]
 ) {
 
-  await github.getOctokit(token).rest.issues.addLabels({
-    owner: github.context.repo.owner,
-    repo: github.context.repo.repo,
+  await getOctokit(token).rest.issues.addLabels({
+    owner: context.repo.owner,
+    repo: context.repo.repo,
     issue_number: issue_number,
     labels: labels
   });
@@ -110,40 +122,59 @@ function isOlderThan30Weeks(issue_number: number, issue_date: string) {
   return Date.parse(issue_date) < thirtyWeeksAgo
 }
 
-async function getMeticsEnabled(
-  token: string,
-  configurationPath: string
-): Promise<boolean> {
-  try {
-    const configurationContent: string = await fetchContent(
-      token,
-      configurationPath
-    );
-  
-    // loads (hopefully) a `{[label:string]: string | StringOrMatchConfig[]}`, but is `any`:
-    const configObject: any = yaml.load(configurationContent);
+interface ConfigObject {
+  enabled: boolean;
+}
 
-    // transform `any` => `Map<string,StringOrMatchConfig[]>` or throw if yaml is malformed:
-    return configObject.enabled;
-  } catch (error) {
-    console.log("Unable to retrieve .github/a11y-metrics.yaml, failing.")
-    return false;
+async function getMeticsEnabled(
+  token: string
+): Promise<boolean> {
+  const supportedFileExtensions = ['yaml', 'yml'];
+  const result = false;
+
+  for (const fileExtension of supportedFileExtensions) {
+    const filePath = `.github/a11y-metrics.${fileExtension}`;
+    const content = await fetchContent(token, filePath);
+
+    if (content) {
+      try {
+        const configObject = yaml.load(content) as ConfigObject;
+        
+        assert.ok(
+          configObject,
+          `Invalid configuration in ${filePath}`
+        )
+        assert.strictEqual(
+          typeof configObject.enabled,
+          'boolean',
+          `Invalid "enabled" property in ${filePath}`
+        )
+
+        return configObject.enabled;
+      } catch (error) {
+        console.log(`Invalid yaml in ${filePath}`)
+      }
+    }
   }
+
+  return result;
 }
 
 async function fetchContent(
   token: string,
-  repoPath: string
-): Promise<string> {
-  const response: any = await github.getOctokit(token).rest.repos.getContent({
-    owner: github.context.repo.owner,
-    repo: github.context.repo.repo,
-    path: repoPath,
-    ref: github.context.sha
-  });
-
-  return Buffer.from(response.data.content, response.data.encoding).toString();
+  path: string
+): Promise<string | undefined> {
+  try {
+    const response: any = await getOctokit(token).rest.repos.getContent({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      path,
+      ref: context.sha
+    });
+    return Buffer.from(response.data.content, response.data.encoding).toString();
+  } catch (error) {
+    return;
+  }
 }
 
 run();
-

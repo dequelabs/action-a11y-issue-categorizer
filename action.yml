@@ -6,6 +6,30 @@ inputs:
     description: 'The GITHUB_TOKEN secret'
     required: true
     default: ${{ github.token }}
+  label-a11y:
+    description: 'Label used to identify accessibility issues that should be categorized'
+    required: false
+    default: "A11Y"
+  label-blocker:
+    description: 'Label used to identify blocker issues'
+    required: false
+    default: "Blocker"
+  label-critical:
+    description: 'Label used to identify critical issues'
+    required: false
+    default: "Critical"
+  label-serious:
+    description: 'Label used to identify serious issues'
+    required: false
+    default: "Serious"
+  label-moderate:
+    description: 'Label used to identify moderate issues'
+    required: false
+    default: "Moderate"
+  label-production:
+    description: 'Label used to identify issues that exist in production'
+    required: false
+    default: "Production"
 runs:
   using: node16
   main: dist/index.js
