@@ -30,6 +30,10 @@ inputs:
     description: 'Label used to identify issues that exist in production'
     required: false
     default: "Production"
+  label-released:
+    description: 'Label used to identify issues that were introduced during the development of a release, but not fixed before the release was deployed'
+    required: false
+    default: "Released"
 runs:
   using: node16
   main: dist/index.js

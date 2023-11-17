@@ -13740,47 +13740,59 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
-const github = __importStar(__nccwpck_require__(5438));
+const github_1 = __nccwpck_require__(5438);
+const assert_1 = __importDefault(__nccwpck_require__(9491));
 const yaml = __importStar(__nccwpck_require__(1917));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         // Configuration parameters
-        const token = core.getInput('repo-token', { required: true });
-        const a11yMetricsConfigPath = '.github/a11y-metrics.yaml';
-        const metricsEnabled = yield getMeticsEnabled(token, a11yMetricsConfigPath);
+        const token = getRequiredInput('repo-token');
+        const metricsEnabled = yield getMeticsEnabled(token);
         if (!metricsEnabled) {
             console.log('Metrics are not enabled, exiting.');
             return;
         }
+        const LABELS = {
+            A11Y: getRequiredInput('label-a11y'),
+            BLOCKER: getRequiredInput('label-blocker'),
+            CRITICAL: getRequiredInput('label-critical'),
+            SERIOUS: getRequiredInput('label-serious'),
+            MODERATE: getRequiredInput('label-moderate'),
+            PRODUCTION: getRequiredInput('label-production'),
+            RELEASED: getRequiredInput('label-released'),
+        };
         // A client to load data from GitHub
-        const issues = yield findIssues(token);
+        const issues = yield findIssues(token, LABELS.A11Y);
         issues.forEach(issue => {
             const issue_number = issue.number;
             const issue_date = issue.created_at;
             const addLabel = [];
-            if (issueHasLabel(issue, 'Production')) {
+            if (issueHasLabel(issue, LABELS.PRODUCTION)) {
                 // Accessbilility Issues we missed and are in production already:
-                if (issueHasLabel(issue, 'Blocker') && isOlderThan4Weeks(issue_number, issue_date)) {
+                if (issueHasLabel(issue, LABELS.BLOCKER) && isOlderThan4Weeks(issue_number, issue_date)) {
                     addLabel.push('CAT1');
                 }
-                else if (issueHasLabel(issue, 'Critical') && isOlderThan10Weeks(issue_number, issue_date)) {
+                else if (issueHasLabel(issue, LABELS.CRITICAL) && isOlderThan10Weeks(issue_number, issue_date)) {
                     addLabel.push('CAT2');
                 }
-                else if (issueHasLabel(issue, 'Serious') && isOlderThan20Weeks(issue_number, issue_date)) {
+                else if (issueHasLabel(issue, LABELS.SERIOUS) && isOlderThan20Weeks(issue_number, issue_date)) {
                     addLabel.push('CAT3');
                 }
-                else if (issueHasLabel(issue, 'Moderate') && isOlderThan30Weeks(issue_number, issue_date)) {
+                else if (issueHasLabel(issue, LABELS.MODERATE) && isOlderThan30Weeks(issue_number, issue_date)) {
                     addLabel.push('CAT4');
                 }
             }
-            else if (issueHasLabel(issue, 'Released')) {
+            else if (issueHasLabel(issue, LABELS.RELEASED)) {
                 // Accessibility Issues we created in release cycle:
-                if ((issueHasLabel(issue, 'Blocker') || issueHasLabel(issue, 'Critical') || issueHasLabel(issue, 'Serious'))) {
+                if ((issueHasLabel(issue, LABELS.BLOCKER) || issueHasLabel(issue, LABELS.CRITICAL) || issueHasLabel(issue, LABELS.SERIOUS))) {
                     addLabel.push('CAT0');
                 }
-                else if (issueHasLabel(issue, 'Moderate') && isOlderThan10Weeks(issue_number, issue_date)) {
+                else if (issueHasLabel(issue, LABELS.MODERATE) && isOlderThan10Weeks(issue_number, issue_date)) {
                     addLabel.push('CAT2');
                 }
             }
@@ -13791,18 +13803,21 @@ function run() {
         });
     });
 }
+function getRequiredInput(name) {
+    return core.getInput(name, { required: true });
+}
 function issueHasLabel(issue, label) {
     if (issue) {
         return issue.labels.find(({ name: name }) => name === label);
     }
     return;
 }
-function findIssues(token) {
+function findIssues(token, labels) {
     return __awaiter(this, void 0, void 0, function* () {
-        const issues = yield github.getOctokit(token).paginate(github.getOctokit(token).rest.issues.listForRepo, {
-            owner: github.context.repo.owner,
-            repo: github.context.repo.repo,
-            labels: 'A11Y',
+        const issues = yield (0, github_1.getOctokit)(token).paginate((0, github_1.getOctokit)(token).rest.issues.listForRepo, {
+            owner: github_1.context.repo.owner,
+            repo: github_1.context.repo.repo,
+            labels,
             state: 'open'
         });
         return issues;
@@ -13810,9 +13825,9 @@ function findIssues(token) {
 }
 function addLabels(token, issue_number, labels) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield github.getOctokit(token).rest.issues.addLabels({
-            owner: github.context.repo.owner,
-            repo: github.context.repo.repo,
+        yield (0, github_1.getOctokit)(token).rest.issues.addLabels({
+            owner: github_1.context.repo.owner,
+            repo: github_1.context.repo.repo,
             issue_number: issue_number,
             labels: labels
         });
@@ -13838,30 +13853,42 @@ function isOlderThan30Weeks(issue_number, issue_date) {
     console.log(`Comparing issue ${issue_number} issue_date ${issue_date} : ${Date.parse(issue_date)} to 30 weeks ago ${new Date(thirtyWeeksAgo)} : ${thirtyWeeksAgo}`);
     return Date.parse(issue_date) < thirtyWeeksAgo;
 }
-function getMeticsEnabled(token, configurationPath) {
+function getMeticsEnabled(token) {
     return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const configurationContent = yield fetchContent(token, configurationPath);
-            // loads (hopefully) a `{[label:string]: string | StringOrMatchConfig[]}`, but is `any`:
-            const configObject = yaml.load(configurationContent);
-            // transform `any` => `Map<string,StringOrMatchConfig[]>` or throw if yaml is malformed:
-            return configObject.enabled;
+        const supportedFileExtensions = ['yaml', 'yml'];
+        const result = false;
+        for (const fileExtension of supportedFileExtensions) {
+            const filePath = `.github/a11y-metrics.${fileExtension}`;
+            const content = yield fetchContent(token, filePath);
+            if (content) {
+                try {
+                    const configObject = yaml.load(content);
+                    assert_1.default.ok(configObject, `Invalid configuration in ${filePath}`);
+                    assert_1.default.strictEqual(typeof configObject.enabled, 'boolean', `Invalid "enabled" property in ${filePath}`);
+                    return configObject.enabled;
+                }
+                catch (error) {
+                    console.log(`Invalid yaml in ${filePath}`);
+                }
+            }
         }
-        catch (error) {
-            console.log("Unable to retrieve .github/a11y-metrics.yaml, failing.");
-            return false;
-        }
+        return result;
     });
 }
-function fetchContent(token, repoPath) {
+function fetchContent(token, path) {
     return __awaiter(this, void 0, void 0, function* () {
-        const response = yield github.getOctokit(token).rest.repos.getContent({
-            owner: github.context.repo.owner,
-            repo: github.context.repo.repo,
-            path: repoPath,
-            ref: github.context.sha
-        });
-        return Buffer.from(response.data.content, response.data.encoding).toString();
+        try {
+            const response = yield (0, github_1.getOctokit)(token).rest.repos.getContent({
+                owner: github_1.context.repo.owner,
+                repo: github_1.context.repo.repo,
+                path,
+                ref: github_1.context.sha
+            });
+            return Buffer.from(response.data.content, response.data.encoding).toString();
+        }
+        catch (error) {
+            return;
+        }
     });
 }
 run();

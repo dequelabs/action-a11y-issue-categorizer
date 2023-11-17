@@ -19,6 +19,7 @@ async function run() {
     SERIOUS: getRequiredInput('label-serious'),
     MODERATE: getRequiredInput('label-moderate'),
     PRODUCTION: getRequiredInput('label-production'),
+    RELEASED: getRequiredInput('label-released'),
   };
 
   // A client to load data from GitHub
@@ -41,7 +42,7 @@ async function run() {
       } else if(issueHasLabel(issue, LABELS.MODERATE) && isOlderThan30Weeks(issue_number, issue_date)) {
         addLabel.push('CAT4')
       }  
-    } else if (issueHasLabel(issue, 'Released')) {
+    } else if (issueHasLabel(issue, LABELS.RELEASED)) {
       // Accessibility Issues we created in release cycle:
       if((issueHasLabel(issue, LABELS.BLOCKER) || issueHasLabel(issue, LABELS.CRITICAL) || issueHasLabel(issue, LABELS.SERIOUS))) {
         addLabel.push('CAT0')
